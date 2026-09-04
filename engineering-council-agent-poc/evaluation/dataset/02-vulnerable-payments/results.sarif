@@ -1,0 +1,64 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "FixtureScanner",
+          "version": "1.0.0",
+          "rules": [
+            {
+              "id": "CWE-89",
+              "name": "SqlInjection",
+              "shortDescription": { "text": "SQL query built from untrusted input." },
+              "helpUri": "https://cwe.mitre.org/data/definitions/89.html",
+              "properties": { "tags": [ "security", "external/cwe/cwe-89" ] },
+              "defaultConfiguration": { "level": "error" }
+            },
+            {
+              "id": "CWE-798",
+              "name": "HardcodedCredential",
+              "shortDescription": { "text": "Credential embedded in source." },
+              "helpUri": "https://cwe.mitre.org/data/definitions/798.html",
+              "properties": { "tags": [ "security", "external/cwe/cwe-798" ] },
+              "defaultConfiguration": { "level": "error" }
+            }
+          ]
+        }
+      },
+      "artifacts": [ { "location": { "uri": "src/AccountRepository.cs" } } ],
+      "invocations": [ { "executionSuccessful": true } ],
+      "results": [
+        {
+          "ruleId": "CWE-89",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": { "text": "The account name is concatenated into a SQL command." },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": { "uri": "src/AccountRepository.cs" },
+                "region": { "startLine": 16, "startColumn": 9, "snippet": { "text": "var sql = \"... WHERE Name = '\" + name + \"'\";" } }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CWE-798",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": { "text": "A database password is hardcoded in source." },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": { "uri": "src/AccountRepository.cs" },
+                "region": { "startLine": 9, "startColumn": 5 }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

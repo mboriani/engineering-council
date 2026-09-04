@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>EngineeringCouncil.Tests</RootNamespace>
+    <AssemblyName>EngineeringCouncil.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EngineeringCouncil.Core\EngineeringCouncil.Core.csproj" />
+    <ProjectReference Include="..\EngineeringCouncil.Agent\EngineeringCouncil.Agent.csproj" />
+    <ProjectReference Include="..\EngineeringCouncil.Infrastructure\EngineeringCouncil.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+</Project>

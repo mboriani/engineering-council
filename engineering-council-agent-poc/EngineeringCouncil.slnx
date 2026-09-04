@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/EngineeringCouncil.Agent/EngineeringCouncil.Agent.csproj" />
+    <Project Path="src/EngineeringCouncil.Api/EngineeringCouncil.Api.csproj" />
+    <Project Path="src/EngineeringCouncil.AppHost/EngineeringCouncil.AppHost.csproj" />
+    <Project Path="src/EngineeringCouncil.Cli/EngineeringCouncil.Cli.csproj" />
+    <Project Path="src/EngineeringCouncil.Core/EngineeringCouncil.Core.csproj" />
+    <Project Path="src/EngineeringCouncil.Infrastructure/EngineeringCouncil.Infrastructure.csproj" />
+    <Project Path="src/EngineeringCouncil.Tests/EngineeringCouncil.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,5 @@
+{
+  "name": "04-fragile-reliability",
+  "purpose": "Reliability stress case: an outbound call with no timeout, a swallowed exception, no retry policy, and a fire-and-forget background loop. Exercises the Reliability discipline.",
+  "expectedSignals": [ "Reliability" ]
+}

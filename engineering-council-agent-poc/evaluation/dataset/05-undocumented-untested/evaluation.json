@@ -1,0 +1,5 @@
+{
+  "name": "05-undocumented-untested",
+  "purpose": "Documentation and testing gaps: a public API with no XML docs, no README, no tests, and a long branch-heavy method. Exercises the Documentation, Testing and CodeQuality disciplines.",
+  "expectedSignals": [ "Documentation", "Testing", "CodeQuality" ]
+}

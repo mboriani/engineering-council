@@ -1,0 +1,5 @@
+{
+  "name": "01-clean-service",
+  "purpose": "Baseline / false-positive control: a small, documented, tested service with no deliberate defects. Findings here indicate over-reporting.",
+  "expectedSignals": []
+}

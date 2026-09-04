@@ -1,0 +1,23 @@
+# Build output
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+artifacts/
+*.user
+
+# Analysis run outputs (keep the folder, ignore generated runs)
+outputs/*
+!outputs/.gitkeep
+
+# IDE / OS
+.vs/
+.idea/
+.vscode/
+*.suo
+Thumbs.db
+.DS_Store
+
+# Secrets / local config
+*.env
+appsettings.*.local.json

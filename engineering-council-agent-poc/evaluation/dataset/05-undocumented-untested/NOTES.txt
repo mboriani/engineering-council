@@ -1,0 +1,7 @@
+Fixture 05 — undocumented-untested.
+
+This repository deliberately has NO README.md and NO tests directory, so the evaluation can
+observe how the Documentation and Testing disciplines behave when the signals are absent
+rather than present. (This NOTES.txt is intentionally not a README.)
+
+Its purpose is recorded in evaluation.json and in evaluation/README.md.

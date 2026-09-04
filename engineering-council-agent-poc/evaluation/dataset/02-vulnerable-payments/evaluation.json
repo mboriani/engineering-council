@@ -1,0 +1,6 @@
+{
+  "name": "02-vulnerable-payments",
+  "purpose": "Intentionally vulnerable: hardcoded credential, SQL built by concatenation, and an unauthenticated endpoint. Exercises the Security discipline and, via the bundled SARIF, deterministic multi-source reconciliation.",
+  "expectedSignals": [ "Security" ],
+  "sarif": "results.sarif"
+}

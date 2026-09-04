@@ -1,0 +1,199 @@
+{
+  "runId": "20260904-000752-961888",
+  "targetPath": "C:\\Repositories\\Paramo\\RedirectTo\\redirect-to-service",
+  "solutionName": "RedirectToService",
+  "branch": "master",
+  "commit": "4a7d279aaa99",
+  "repositoryIdentity": {
+    "versionControl": "git",
+    "commitSha": "4a7d279aaa99898ea76128af12575b70431c401a",
+    "branch": "master",
+    "isDirty": false,
+    "hasUntrackedFiles": false,
+    "snapshotFingerprint": "SNAP-23d782a35393",
+    "repositoryChangedDuringRun": false
+  },
+  "projects": 6,
+  "status": "completed",
+  "provider": "OpenCode",
+  "filesScanned": 122,
+  "evidence": [
+    {
+      "id": "8210d6dc6ab8",
+      "providerName": "OpenCode",
+      "providerId": "opencode",
+      "providerVersion": "opencode-adapter-v1",
+      "providerType": "agentic",
+      "rawResponse": "",
+      "confidence": 0,
+      "executionTime": "00:00:00",
+      "duration": "00:10:00.1450007",
+      "success": false,
+      "errorMessage": "Timed out after 00:05:00.",
+      "retryCount": 1,
+      "attemptCount": 2,
+      "retryExhausted": true,
+      "repairAttemptCount": 0,
+      "responseTruncated": false,
+      "errorCategory": "Timeout",
+      "acquisitionScope": "discipline",
+      "requestedDiscipline": "security",
+      "correlationId": "OpenCode:Security",
+      "acquisitionStepId": "OpenCode#Security",
+      "contextFileCount": 0,
+      "contextCharacterCount": 0,
+      "contextSelectionStrategy": "agentic",
+      "contextFingerprint": "",
+      "metadata": {},
+      "createdAt": "2026-09-04T00:17:52.4194484+00:00"
+    }
+  ],
+  "observations": [],
+  "observationInterpretationSummary": {
+    "evidenceProcessed": 0,
+    "evidenceFailed": 1,
+    "evidenceUnsupported": 0,
+    "observationsProduced": 0,
+    "unclaimedObservationCount": 0,
+    "interpreterFailures": 0,
+    "disciplineMismatches": 0,
+    "invalidFileReferencesDropped": 0,
+    "observationsByDiscipline": {},
+    "observationsByProvider": {},
+    "duration": "00:00:00.0004223"
+  },
+  "rawFindings": [],
+  "findings": [],
+  "reconciliationSummary": {
+    "rawFindingCount": 0,
+    "consolidatedFindingCount": 0,
+    "reconciliationGroupCount": 0,
+    "multiProviderFindingCount": 0,
+    "singleProviderFindingCount": 0,
+    "contradictionCount": 0,
+    "preDedupFindingCount": 0,
+    "postDedupFindingCount": 0,
+    "deduplicatedFindingCount": 0,
+    "findingsByProvider": {},
+    "duration": "00:00:00.0051911"
+  },
+  "reconciliationGroups": [],
+  "summary": {
+    "executiveSummary": "The council reviewed RedirectToService and found no actionable engineering opportunities in this run.",
+    "keyRisks": [
+      "No medium-or-higher risks identified."
+    ],
+    "recommendedNextActions": [],
+    "categoryBreakdown": {},
+    "severityBreakdown": {},
+    "confidenceBreakdown": {},
+    "mergeSummary": {
+      "rawFindingCount": 0,
+      "consolidatedFindingCount": 0,
+      "mergedGroupCount": 0,
+      "duplicatesRemoved": 0,
+      "note": "No findings were merged; each raw finding is distinct."
+    },
+    "generatedAt": "2026-09-04T00:17:52.5307745+00:00"
+  },
+  "acquisitionPlan": {
+    "runId": "20260904-000752-961888",
+    "steps": [
+      {
+        "stepId": "OpenCode#Security",
+        "providerName": "OpenCode",
+        "scope": "discipline",
+        "discipline": "security",
+        "instructionsReference": "Security",
+        "contextSelectionStrategy": "security-focused-v1",
+        "correlationId": "OpenCode:Security"
+      }
+    ],
+    "createdAt": "2026-09-04T00:07:52.2678929+00:00",
+    "unsupportedCombinations": [],
+    "repositoryScopedSteps": 0,
+    "disciplineScopedSteps": 1
+  },
+  "requestedDisciplines": [
+    "security"
+  ],
+  "providerExecution": {
+    "providersExecuted": [
+      "OpenCode"
+    ],
+    "totalExecutions": 1,
+    "failures": 1,
+    "successfulExecutionCount": 0,
+    "evidenceCount": 0,
+    "observationsProduced": 0,
+    "contextFilesSelected": 0,
+    "partialProviderCount": 0,
+    "knownTokenExecutionCount": 0,
+    "totalRetries": 1,
+    "totalRepairAttempts": 0,
+    "successfulRepairs": 0,
+    "timeoutCount": 1,
+    "totalDuration": "00:10:00.1450007",
+    "plan": {
+      "runId": "20260904-000752-961888",
+      "steps": [
+        {
+          "stepId": "OpenCode#Security",
+          "providerName": "OpenCode",
+          "scope": "discipline",
+          "discipline": "security",
+          "instructionsReference": "Security",
+          "contextSelectionStrategy": "security-focused-v1",
+          "correlationId": "OpenCode:Security"
+        }
+      ],
+      "createdAt": "2026-09-04T00:07:52.2678929+00:00",
+      "unsupportedCombinations": [],
+      "repositoryScopedSteps": 0,
+      "disciplineScopedSteps": 1
+    },
+    "byProvider": [
+      {
+        "providerName": "OpenCode",
+        "executions": 1,
+        "failures": 1,
+        "evidenceCount": 0,
+        "observationsProduced": 0,
+        "totalDuration": "00:10:00.1450007"
+      }
+    ],
+    "records": [
+      {
+        "runId": "20260904-000752-961888",
+        "stepId": "OpenCode#Security",
+        "providerName": "OpenCode",
+        "providerId": "opencode",
+        "providerVersion": "opencode-adapter-v1",
+        "providerType": "agentic",
+        "scope": "discipline",
+        "requestedDiscipline": "security",
+        "correlationId": "OpenCode:Security",
+        "contextSelectionStrategy": "agentic",
+        "contextFileCount": 0,
+        "contextCharacterCount": 0,
+        "contextFilesConsidered": 122,
+        "contextFingerprint": "",
+        "evidenceCount": 0,
+        "observationsProduced": 0,
+        "retryCount": 1,
+        "attemptCount": 2,
+        "retryExhausted": true,
+        "repairAttemptCount": 0,
+        "responseTruncated": false,
+        "errorCategory": "Timeout",
+        "success": false,
+        "duration": "00:10:00.1450007",
+        "errorMessage": "Timed out after 00:05:00.",
+        "executedAt": "2026-09-04T00:17:52.4214236+00:00"
+      }
+    ],
+    "generatedAt": "2026-09-04T00:17:52.5184354+00:00"
+  },
+  "startedAt": "2026-09-04T00:07:52.0150021+00:00",
+  "completedAt": "2026-09-04T00:17:52.5228975+00:00"
+}

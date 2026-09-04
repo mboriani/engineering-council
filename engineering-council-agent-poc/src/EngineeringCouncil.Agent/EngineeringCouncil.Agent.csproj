@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>EngineeringCouncil.Agent</RootNamespace>
+    <AssemblyName>EngineeringCouncil.Agent</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EngineeringCouncil.Core\EngineeringCouncil.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Analyzers no longer reference Microsoft Agent Framework: that integration
+         moved into the LLM evidence provider (Infrastructure). Analyzers depend
+         only on the Core evidence abstractions plus logging. -->
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+</Project>

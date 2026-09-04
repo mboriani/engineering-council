@@ -1,0 +1,5 @@
+{
+  "name": "03-tangled-architecture",
+  "purpose": "Architecture stress case: the domain layer reaches into infrastructure and the UI, and two modules depend on each other. Exercises layering-violation and coupling signals.",
+  "expectedSignals": [ "Architecture" ]
+}

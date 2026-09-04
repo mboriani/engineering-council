@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>EngineeringCouncil.Infrastructure</RootNamespace>
+    <AssemblyName>EngineeringCouncil.Infrastructure</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EngineeringCouncil.Core\EngineeringCouncil.Core.csproj" />
+    <!-- Infrastructure is the composition layer: it references the concrete agent implementation. -->
+    <ProjectReference Include="..\EngineeringCouncil.Agent\EngineeringCouncil.Agent.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Microsoft Agent Framework now lives here (in the LLM evidence provider). -->
+    <PackageReference Include="Microsoft.Agents.AI" />
+    <PackageReference Include="Microsoft.Extensions.AI" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Options" />
+  </ItemGroup>
+</Project>

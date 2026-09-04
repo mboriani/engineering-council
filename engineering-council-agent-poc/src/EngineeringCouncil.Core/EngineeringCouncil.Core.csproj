@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>EngineeringCouncil.Core</RootNamespace>
+    <AssemblyName>EngineeringCouncil.Core</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Only the logging *abstractions*; keeps the domain otherwise dependency-free. -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,236 @@
+{
+  "version": "1.0",
+  "schemaVersion": "1.1",
+  "repository": "RedirectToService",
+  "branch": "master",
+  "commit": "4a7d279aaa99",
+  "repositorySnapshot": {
+    "versionControl": "git",
+    "commitSha": "4a7d279aaa99898ea76128af12575b70431c401a",
+    "branch": "master",
+    "isDirty": false,
+    "hasUntrackedFiles": false,
+    "snapshotFingerprint": "SNAP-23d782a35393",
+    "repositoryChangedDuringRun": false
+  },
+  "generatedAt": "2026-09-04T00:24:42.5488422+00:00",
+  "analysisRunId": "20260904-001942-1279ae",
+  "analysisDuration": "00:05:00.4755827",
+  "executiveSummary": "Engineering health is Excellent with Low overall risk. The council reviewed RedirectToService and found no actionable engineering opportunities in this run. Coverage limitation: no successful evidence was acquired for Security; absence of findings there must not be interpreted as assurance.",
+  "overallEngineeringHealth": "excellent",
+  "overallRisk": "low",
+  "keyStrengths": [],
+  "keyRisks": [
+    "No medium-or-higher risks identified."
+  ],
+  "recommendedNextActions": [],
+  "findings": [],
+  "councilSummary": {
+    "executiveSummary": "The council reviewed RedirectToService and found no actionable engineering opportunities in this run.",
+    "keyRisks": [
+      "No medium-or-higher risks identified."
+    ],
+    "recommendedNextActions": [],
+    "categoryBreakdown": {},
+    "severityBreakdown": {},
+    "confidenceBreakdown": {},
+    "mergeSummary": {
+      "rawFindingCount": 0,
+      "consolidatedFindingCount": 0,
+      "mergedGroupCount": 0,
+      "duplicatesRemoved": 0,
+      "note": "No findings were merged; each raw finding is distinct."
+    },
+    "generatedAt": "2026-09-04T00:24:42.5021292+00:00"
+  },
+  "acquisitionPlan": {
+    "runId": "20260904-001942-1279ae",
+    "steps": [
+      {
+        "stepId": "OpenCode#Security",
+        "providerName": "OpenCode",
+        "scope": "discipline",
+        "discipline": "security",
+        "instructionsReference": "Security",
+        "contextSelectionStrategy": "security-focused-v1",
+        "correlationId": "OpenCode:Security"
+      }
+    ],
+    "createdAt": "2026-09-04T00:19:42.3112364+00:00",
+    "unsupportedCombinations": [],
+    "repositoryScopedSteps": 0,
+    "disciplineScopedSteps": 1
+  },
+  "acquisitionCoverage": {
+    "repositoryWideSourcesExecuted": [],
+    "disciplineScopedSourcesExecuted": [
+      "OpenCode"
+    ],
+    "disciplinesRequested": [
+      "Security"
+    ],
+    "disciplinesCovered": [],
+    "acquisitionSteps": 1,
+    "failedSteps": 1,
+    "contextFilesConsidered": 122,
+    "contextFilesSelected": 0,
+    "unsupportedCombinations": []
+  },
+  "disciplineCoverage": {
+    "entries": [
+      {
+        "discipline": "Security",
+        "status": "noEvidence",
+        "successfulProviders": 0,
+        "attemptedProviders": 1
+      }
+    ]
+  },
+  "staticAnalysisSources": [],
+  "providerExecution": {
+    "providersExecuted": [
+      "OpenCode"
+    ],
+    "totalExecutions": 1,
+    "failures": 1,
+    "successfulExecutionCount": 0,
+    "evidenceCount": 0,
+    "observationsProduced": 0,
+    "contextFilesSelected": 0,
+    "partialProviderCount": 0,
+    "knownTokenExecutionCount": 0,
+    "totalRetries": 0,
+    "totalRepairAttempts": 0,
+    "successfulRepairs": 0,
+    "timeoutCount": 1,
+    "totalDuration": "00:05:00.0769300",
+    "plan": {
+      "runId": "20260904-001942-1279ae",
+      "steps": [
+        {
+          "stepId": "OpenCode#Security",
+          "providerName": "OpenCode",
+          "scope": "discipline",
+          "discipline": "security",
+          "instructionsReference": "Security",
+          "contextSelectionStrategy": "security-focused-v1",
+          "correlationId": "OpenCode:Security"
+        }
+      ],
+      "createdAt": "2026-09-04T00:19:42.3112364+00:00",
+      "unsupportedCombinations": [],
+      "repositoryScopedSteps": 0,
+      "disciplineScopedSteps": 1
+    },
+    "byProvider": [
+      {
+        "providerName": "OpenCode",
+        "executions": 1,
+        "failures": 1,
+        "evidenceCount": 0,
+        "observationsProduced": 0,
+        "totalDuration": "00:05:00.0769300"
+      }
+    ],
+    "records": [
+      {
+        "runId": "20260904-001942-1279ae",
+        "stepId": "OpenCode#Security",
+        "providerName": "OpenCode",
+        "providerId": "opencode",
+        "providerVersion": "opencode-adapter-v1",
+        "providerType": "agentic",
+        "scope": "discipline",
+        "requestedDiscipline": "security",
+        "correlationId": "OpenCode:Security",
+        "contextSelectionStrategy": "agentic",
+        "contextFileCount": 0,
+        "contextCharacterCount": 0,
+        "contextFilesConsidered": 122,
+        "contextFingerprint": "",
+        "evidenceCount": 0,
+        "observationsProduced": 0,
+        "retryCount": 0,
+        "attemptCount": 1,
+        "retryExhausted": true,
+        "repairAttemptCount": 0,
+        "responseTruncated": false,
+        "errorCategory": "Timeout",
+        "success": false,
+        "duration": "00:05:00.0769300",
+        "errorMessage": "Timed out after 00:05:00.",
+        "executedAt": "2026-09-04T00:24:42.3997053+00:00"
+      }
+    ],
+    "generatedAt": "2026-09-04T00:24:42.4899902+00:00"
+  },
+  "reconciliation": {
+    "rawFindingCount": 0,
+    "consolidatedFindingCount": 0,
+    "reconciliationGroupCount": 0,
+    "multiProviderFindingCount": 0,
+    "singleProviderFindingCount": 0,
+    "contradictionCount": 0,
+    "preDedupFindingCount": 0,
+    "postDedupFindingCount": 0,
+    "deduplicatedFindingCount": 0,
+    "findingsByProvider": {},
+    "duration": "00:00:00.0046657"
+  },
+  "evidenceSummary": {
+    "evidenceSourcesUsed": [],
+    "evidenceCount": 0,
+    "providerFailures": 1,
+    "providerHealth": [
+      {
+        "providerName": "OpenCode",
+        "executions": 1,
+        "failures": 1,
+        "evidenceCount": 0,
+        "totalDuration": "00:05:00.0769300",
+        "status": "Failed"
+      }
+    ],
+    "executionTimes": {
+      "OpenCode": "00:05:00.0769300"
+    },
+    "totalObservations": 0,
+    "unsupportedEvidence": 0,
+    "interpreterFailures": 0,
+    "observationsByProvider": {},
+    "observationsByDiscipline": {},
+    "unclaimedObservations": 0
+  },
+  "metrics": {
+    "totalFindings": 0,
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "info": 0,
+    "mergedFindings": 0,
+    "totalObservations": 0,
+    "evidenceSources": 0,
+    "successfulProviders": 0,
+    "partialProviders": 0,
+    "failedProviders": 1,
+    "unclaimedObservations": 0,
+    "repositoryFiles": 122,
+    "projects": 6,
+    "analysisDuration": "00:05:00.4755827",
+    "averageConfidence": 0,
+    "coverageByDiscipline": {}
+  },
+  "appendix": {
+    "rawFindings": [],
+    "mergeNotes": [],
+    "reconciliationGroups": []
+  },
+  "councilAssessmentSummary": {
+    "singleSourceCount": 0,
+    "strongAgreementCount": 0,
+    "agreementWithDifferencesCount": 0,
+    "potentialConflictCount": 0,
+    "totalAssessed": 0
+  }
+}
