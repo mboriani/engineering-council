@@ -41,37 +41,75 @@ public sealed class GraphifySecurityContextBuilder
 
         var context = new StringBuilder();
 
-        // Header
-        context.AppendLine("# Repository Structural Map — Security");
-        context.AppendLine();
-        context.AppendLine("Graph:");
-        context.AppendLine($"- Nodes: {graph.Nodes?.Count ?? 0}");
-        context.AppendLine($"- Edges: {graph.Links?.Count ?? 0}");
-        context.AppendLine($"- Communities: {graph.Communities?.Count ?? 0}");
-        context.AppendLine("- Extraction: deterministic Graphify analysis");
-        context.AppendLine();
+        // Determine compact mode
+        bool compact = _options.MaxCharacters <= 3000;
+
+        if (compact)
+        {
+            context.AppendLine("# Security Navigation Map");
+            context.AppendLine();
+        }
+        else
+        {
+            // Header
+            context.AppendLine("# Repository Structural Map — Security");
+            context.AppendLine();
+            context.AppendLine("Graph:");
+            context.AppendLine($"- Nodes: {graph.Nodes?.Count ?? 0}");
+            context.AppendLine($"- Edges: {graph.Links?.Count ?? 0}");
+            context.AppendLine($"- Communities: {graph.Communities?.Count ?? 0}");
+            context.AppendLine("- Extraction: deterministic Graphify analysis");
+            context.AppendLine();
+        }
 
         // Security-relevant areas
         var securityNodes = SelectSecurityRelevantNodes(graph);
+        // Limit total nodes across categories
+        if (securityNodes.Count > _options.MaxTotalSecurityNodes)
+            securityNodes = securityNodes.Take(_options.MaxTotalSecurityNodes).ToList();
+
         if (securityNodes.Count > 0)
         {
-            context.AppendLine("## Security-Relevant Areas");
-            context.AppendLine();
-
-            var grouped = GroupByCategory(securityNodes);
-            foreach (var (category, nodes) in grouped)
+            if (compact)
             {
-                context.AppendLine($"[{category}]");
-                foreach (var node in nodes.Take(_options.MaxNodesPerCategory))
-                {
-                    context.AppendLine($"  - File: {node.SourceFile ?? "unknown"}");
-                    context.AppendLine($"    Symbol: {node.Label}");
-                    if (!string.IsNullOrWhiteSpace(node.SourceLocation))
-                        context.AppendLine($"    Location: {node.SourceLocation}");
-                    if (!string.IsNullOrWhiteSpace(node.NormLabel))
-                        context.AppendLine($"    Type: {GetNodeType(node)}");
-                }
+                context.AppendLine("Start here:");
                 context.AppendLine();
+                int idx = 1;
+                var grouped = GroupByCategory(securityNodes);
+                foreach (var (category, nodes) in grouped)
+                {
+                    foreach (var node in nodes.Take(_options.MaxNodesPerCategory))
+                    {
+                        var file = node.SourceFile ?? "unknown";
+                        var symbol = node.Label ?? "unknown";
+                        context.AppendLine($"{idx}. {file}");
+                        context.AppendLine($"   {symbol}");
+                        context.AppendLine($"   {category.ToLowerInvariant()}-related");
+                        context.AppendLine();
+                        idx++;
+                    }
+                }
+            }
+            else
+            {
+                context.AppendLine("## Security-Relevant Areas");
+                context.AppendLine();
+
+                var grouped = GroupByCategory(securityNodes);
+                foreach (var (category, nodes) in grouped)
+                {
+                    context.AppendLine($"[{category}]");
+                    foreach (var node in nodes.Take(_options.MaxNodesPerCategory))
+                    {
+                        context.AppendLine($"  - File: {node.SourceFile ?? "unknown"}");
+                        context.AppendLine($"    Symbol: {node.Label}");
+                        if (!string.IsNullOrWhiteSpace(node.SourceLocation))
+                            context.AppendLine($"    Location: {node.SourceLocation}");
+                        if (!string.IsNullOrWhiteSpace(node.NormLabel))
+                            context.AppendLine($"    Type: {GetNodeType(node)}");
+                    }
+                    context.AppendLine();
+                }
             }
         }
 
@@ -79,48 +117,84 @@ public sealed class GraphifySecurityContextBuilder
         var securityLinks = SelectSecurityRelevantLinks(graph, securityNodes);
         if (securityLinks.Count > 0)
         {
-            context.AppendLine("## Structural Relationships");
-            context.AppendLine();
-
-            foreach (var link in securityLinks.Take(_options.MaxRelationships))
+            if (compact)
             {
-                var source = graph.Nodes?.FirstOrDefault(n => n.Id == link.Source);
-                var target = graph.Nodes?.FirstOrDefault(n => n.Id == link.Target);
-                if (source is not null && target is not null)
+                context.AppendLine("Relationships:");
+                foreach (var link in securityLinks.Take(_options.MaxRelationships))
                 {
-                    var confidenceLabel = link.Confidence ?? "UNKNOWN";
-                    context.AppendLine($"{source.Label} → {link.Relation?.ToUpperInvariant() ?? "RELATES_TO"} → {target.Label}");
-                    context.AppendLine($"  Confidence: {confidenceLabel}");
-                    if (!string.IsNullOrWhiteSpace(link.SourceFile))
-                        context.AppendLine($"  Source: {link.SourceFile}");
-                    if (link.ConfidenceScore.HasValue)
-                        context.AppendLine($"  Score: {link.ConfidenceScore.Value:0.00}");
+                    var source = graph.Nodes?.FirstOrDefault(n => n.Id == link.Source);
+                    var target = graph.Nodes?.FirstOrDefault(n => n.Id == link.Target);
+                    if (source is not null && target is not null)
+                    {
+                        var rel = link.Relation?.ToUpperInvariant() ?? "RELATES_TO";
+                        var conf = link.Confidence ?? "UNKNOWN";
+                        context.AppendLine($"- {source.Label} → {rel} → {target.Label} [{conf}]");
+                    }
                 }
+                context.AppendLine();
             }
-            context.AppendLine();
+            else
+            {
+                context.AppendLine("## Structural Relationships");
+                context.AppendLine();
+
+                foreach (var link in securityLinks.Take(_options.MaxRelationships))
+                {
+                    var source = graph.Nodes?.FirstOrDefault(n => n.Id == link.Source);
+                    var target = graph.Nodes?.FirstOrDefault(n => n.Id == link.Target);
+                    if (source is not null && target is not null)
+                    {
+                        var confidenceLabel = link.Confidence ?? "UNKNOWN";
+                        context.AppendLine($"{source.Label} → {link.Relation?.ToUpperInvariant() ?? "RELATES_TO"} → {target.Label}");
+                        context.AppendLine($"  Confidence: {confidenceLabel}");
+                        if (!string.IsNullOrWhiteSpace(link.SourceFile))
+                            context.AppendLine($"  Source: {link.SourceFile}");
+                        if (link.ConfidenceScore.HasValue)
+                            context.AppendLine($"  Score: {link.ConfidenceScore.Value:0.00}");
+                    }
+                }
+                context.AppendLine();
+            }
         }
 
         // Navigation candidates
         var navigationNodes = SelectNavigationCandidates(graph, securityNodes);
         if (navigationNodes.Count > 0)
         {
-            context.AppendLine("## Navigation Candidates");
-            context.AppendLine();
-
-            for (int i = 0; i < navigationNodes.Count && i < _options.MaxNavigationCandidates; i++)
+            if (compact)
             {
-                var node = navigationNodes[i];
-                context.AppendLine($"{i + 1}. {node.Label} ({node.SourceFile ?? "unknown"})");
+                // In compact mode, navigation candidates already listed in Start here, skip separate section
             }
-            context.AppendLine();
+            else
+            {
+                context.AppendLine("## Navigation Candidates");
+                context.AppendLine();
+
+                for (int i = 0; i < navigationNodes.Count && i < _options.MaxNavigationCandidates; i++)
+                {
+                    var node = navigationNodes[i];
+                    context.AppendLine($"{i + 1}. {node.Label} ({node.SourceFile ?? "unknown"})");
+                }
+                context.AppendLine();
+            }
         }
 
-        // Graph limitations
-        context.AppendLine("## Known Graph Limitations");
-        context.AppendLine("- relationships may be heuristic");
-        context.AppendLine("- absence from this map does not imply absence from repository");
-        context.AppendLine("- verify all conclusions against source");
-        context.AppendLine("- exploration outside this map is expected");
+        // Graph limitations / notes
+        if (compact)
+        {
+            context.AppendLine("Notes:");
+            context.AppendLine("- navigation hints only");
+            context.AppendLine("- verify against source");
+            context.AppendLine("- explore outside this map");
+        }
+        else
+        {
+            context.AppendLine("## Known Graph Limitations");
+            context.AppendLine("- relationships may be heuristic");
+            context.AppendLine("- absence from this map does not imply absence from repository");
+            context.AppendLine("- verify all conclusions against source");
+            context.AppendLine("- exploration outside this map is expected");
+        }
 
         var result = context.ToString();
         return EnforceBudget(result);
@@ -131,14 +205,17 @@ public sealed class GraphifySecurityContextBuilder
         if (graph.Nodes is null)
             return [];
 
-        var securityKeywords = new[]
+        var strongKeywords = new[]
         {
             "auth", "authentication", "authorization", "token", "credential", "secret",
-            "encrypt", "crypto", "password", "key", "certificate", "cors", "swagger",
-            "request filter", "header", "cookie", "session", "identity", "configuration",
-            "appsettings", "swagger", "jwt", "oauth", "openid", "claims", "principal",
-            "authorization", "authentication", "secure", "sign", "verify", "hash",
-            "certificate", "tls", "ssl", "https", "cookie", "session", "csrf", "xss"
+            "encrypt", "crypto", "password", "certificate", "cors", "swagger",
+            "identity", "session", "jwt", "oauth", "openid", "claims", "principal",
+            "secure", "sign", "verify", "hash", "tls", "ssl", "https", "csrf", "xss"
+        };
+
+        var weakKeywords = new[]
+        {
+            "key", "header", "cookie", "configuration", "config", "appsettings", "request filter"
         };
 
         var selected = new List<GraphifyNode>();
@@ -152,20 +229,56 @@ public sealed class GraphifySecurityContextBuilder
             var idLower = node.Id.ToLowerInvariant();
             var fileLower = (node.SourceFile ?? string.Empty).ToLowerInvariant();
 
-            var isRelevant = securityKeywords.Any(kw =>
+            bool strongMatch = strongKeywords.Any(kw =>
                 labelLower.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
                 idLower.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
                 fileLower.Contains(kw, StringComparison.OrdinalIgnoreCase));
+
+            bool weakMatch = weakKeywords.Any(kw =>
+                labelLower.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
+                idLower.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
+                fileLower.Contains(kw, StringComparison.OrdinalIgnoreCase));
+
+            bool isRelevant;
+            if (_options.SuppressWeakKeywords)
+            {
+                isRelevant = strongMatch;
+            }
+            else
+            {
+                isRelevant = strongMatch || weakMatch;
+            }
 
             if (isRelevant)
                 selected.Add(node);
         }
 
-        // Order deterministically: by category priority, then by label
-        return selected
-            .OrderBy(n => GetCategoryPriority(GetCategory(n)))
-            .ThenBy(n => n.Label, StringComparer.Ordinal)
-            .ToList();
+        // Production preference
+        if (_options.PreferProduction)
+        {
+            selected = selected
+                .OrderBy(n => IsTestFile(n.SourceFile) ? 1 : 0)
+                .ThenBy(n => GetCategoryPriority(GetCategory(n)))
+                .ThenBy(n => n.Label, StringComparer.Ordinal)
+                .ToList();
+        }
+        else
+        {
+            selected = selected
+                .OrderBy(n => GetCategoryPriority(GetCategory(n)))
+                .ThenBy(n => n.Label, StringComparer.Ordinal)
+                .ToList();
+        }
+
+        return selected;
+    }
+
+    private bool IsTestFile(string? sourceFile)
+    {
+        if (string.IsNullOrWhiteSpace(sourceFile))
+            return false;
+        var lower = sourceFile.ToLowerInvariant();
+        return lower.Contains("/test/") || lower.Contains("/tests/") || lower.Contains("\\test\\") || lower.Contains("\\tests\\") || lower.EndsWith("tests.cs") || lower.Contains("test");
     }
 
     private List<GraphifyLink> SelectSecurityRelevantLinks(GraphifyGraph graph, List<GraphifyNode> securityNodes)
@@ -264,7 +377,7 @@ public sealed class GraphifySecurityContextBuilder
             return "CORS_HEADERS";
 
         if (labelLower.Contains("encrypt") || labelLower.Contains("crypto") || labelLower.Contains("password") ||
-            labelLower.Contains("secret") || labelLower.Contains("key") || labelLower.Contains("certificate") ||
+            labelLower.Contains("secret") || labelLower.Contains("certificate") ||
             labelLower.Contains("sign") || labelLower.Contains("verify") || labelLower.Contains("hash") ||
             labelLower.Contains("tls") || labelLower.Contains("ssl"))
             return "CRYPTO_SECRETS";
@@ -444,7 +557,7 @@ public sealed class GraphifySecurityContextBuilder
 /// </summary>
 public sealed class GraphContextOptions
 {
-    /// <summary>Maximum characters in the generated context. Default 12,000.</summary>
+    /// <summary>Maximum characters in the generated context. Default 12,000 (full map).</summary>
     public int MaxCharacters { get; init; } = 12_000;
 
     /// <summary>Maximum nodes per security category. Default 10.</summary>
@@ -455,4 +568,25 @@ public sealed class GraphContextOptions
 
     /// <summary>Maximum navigation candidates to include. Default 10.</summary>
     public int MaxNavigationCandidates { get; init; } = 10;
+
+    /// <summary>Maximum total security nodes across all categories. Default 100 (effectively unlimited).</summary>
+    public int MaxTotalSecurityNodes { get; init; } = 100;
+
+    /// <summary>Prefer production code over test code when selecting nodes. Default false (original behavior).</summary>
+    public bool PreferProduction { get; init; } = false;
+
+    /// <summary>Suppress weak keywords (e.g., "key", "header", "configuration") unless accompanied by a strong security keyword. Default false (original behavior).</summary>
+    public bool SuppressWeakKeywords { get; init; } = false;
+
+    /// <summary>Pre-configured minimal navigation profile (≈3 000 chars).</summary>
+    public static GraphContextOptions MinimalNavigation => new()
+    {
+        MaxCharacters = 3_000,
+        MaxNodesPerCategory = 5,
+        MaxRelationships = 10,
+        MaxNavigationCandidates = 5,
+        MaxTotalSecurityNodes = 15,
+        PreferProduction = true,
+        SuppressWeakKeywords = true
+    };
 }

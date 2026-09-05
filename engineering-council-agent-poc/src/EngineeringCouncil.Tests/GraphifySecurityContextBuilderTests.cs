@@ -371,4 +371,203 @@ public sealed class GraphifySecurityContextBuilderTests
             File.Delete(tempPath);
         }
     }
+
+    // Test 13 — MinimalNavigation profile does not exceed 3000 chars
+    [Fact]
+    public void MinimalNavigation_DoesNotExceed3000Characters()
+    {
+        var graph = CreateTestGraph();
+        var builder = new GraphifySecurityContextBuilder(GraphContextOptions.MinimalNavigation);
+
+        var output = builder.Build(graph);
+
+        Assert.True(output.Length <= 3_000, $"Output length {output.Length} exceeds 3000");
+    }
+
+    // Test 14 — MinimalNavigation deterministic
+    [Fact]
+    public void MinimalNavigation_Deterministic()
+    {
+        var graph = CreateTestGraph();
+        var builder = new GraphifySecurityContextBuilder(GraphContextOptions.MinimalNavigation);
+
+        var output1 = builder.Build(graph);
+        var output2 = builder.Build(graph);
+
+        Assert.Equal(output1, output2);
+    }
+
+    // Test 15 — Production nodes preferred over test nodes
+    [Fact]
+    public void PreferProduction_RanksProductionBeforeTest()
+    {
+        var graph = CreateTestGraphWithTestFile();
+        var options = new GraphContextOptions { PreferProduction = true, SuppressWeakKeywords = true };
+        var builder = new GraphifySecurityContextBuilder(options);
+
+        var output = builder.Build(graph);
+
+        // Find positions of production and test nodes in the output
+        var prodIdx = output.IndexOf("AuthProdService");
+        var testIdx = output.IndexOf("AuthTestService");
+        Assert.True(prodIdx >= 0 && testIdx >= 0, "Both nodes should appear");
+        Assert.True(prodIdx < testIdx, "Production node should appear before test node");
+    }
+
+    // Test 16 — Weak keyword alone does not select node when SuppressWeakKeywords=true
+    [Fact]
+    public void SuppressWeakKeywords_IgnoresWeakOnlyMatches()
+    {
+        var graph = CreateTestGraphWithWeakOnlyNode();
+        var options = new GraphContextOptions { SuppressWeakKeywords = true };
+        var builder = new GraphifySecurityContextBuilder(options);
+
+        var output = builder.Build(graph);
+
+        // Weak-only node "ConfigKey" should not appear in security areas
+        Assert.DoesNotContain("ConfigKey", output);
+    }
+
+    // Test 17 — Strong signals remain selected under suppression
+    [Fact]
+    public void SuppressWeakKeywords_StrongSignalsStillSelected()
+    {
+        var graph = CreateTestGraphWithStrongNode();
+        var options = new GraphContextOptions { SuppressWeakKeywords = true };
+        var builder = new GraphifySecurityContextBuilder(options);
+
+        var output = builder.Build(graph);
+
+        Assert.Contains("AuthHandler", output);
+    }
+
+    // Test 18 — Default options produce full (non‑compact) map
+    [Fact]
+    public void DefaultOptions_ProducesFullMap()
+    {
+        var graph = CreateTestGraph();
+        var builder = new GraphifySecurityContextBuilder(); // default options
+
+        var output = builder.Build(graph);
+
+        // Full map header should be present, not compact header
+        Assert.Contains("# Repository Structural Map — Security", output);
+        Assert.DoesNotContain("# Security Navigation Map", output);
+        Assert.Contains("## Security-Relevant Areas", output);
+        Assert.Contains("## Structural Relationships", output);
+        Assert.Contains("## Navigation Candidates", output);
+        Assert.Contains("## Known Graph Limitations", output);
+    }
+
+    // Test 19 — MinimalNavigation output compatible with AdditionalContext
+    [Fact]
+    public void MinimalNavigation_OutputCompatibleWithAdditionalContext()
+    {
+        var graph = CreateTestGraph();
+        var builder = new GraphifySecurityContextBuilder(GraphContextOptions.MinimalNavigation);
+        var context = builder.Build(graph);
+
+        var request = new EvidenceRequest
+        {
+            RunId = "test",
+            RepositorySnapshot = new RepositorySnapshot { RootPath = "/test", SolutionName = "Test" },
+            Scope = EvidenceAcquisitionScope.Discipline,
+            Instructions = "Test",
+            ContextSelection = new AnalysisContextSelection
+            {
+                Strategy = "test",
+                Files = [],
+                TotalRepositoryFiles = 0,
+                SelectedFileCount = 0,
+                EstimatedContentSize = 0
+            },
+            ProviderNames = ["Test"],
+            CorrelationId = "test",
+            AdditionalContext = context
+        };
+
+        Assert.Equal(context, request.AdditionalContext);
+    }
+
+    // Helper: graph with a test‑file node (both have strong auth keyword)
+    private static GraphifySecurityContextBuilder.GraphifyGraph CreateTestGraphWithTestFile()
+    {
+        return new GraphifySecurityContextBuilder.GraphifyGraph
+        {
+            Nodes =
+            [
+                new GraphifySecurityContextBuilder.GraphifyNode
+                {
+                    Id = "prod1",
+                    Label = "AuthProdService",
+                    SourceFile = "src/Services/ProdService.cs",
+                    Callable = true,
+                    CallableClass = true,
+                    NormLabel = "authprodservice",
+                    FileType = "code"
+                },
+                new GraphifySecurityContextBuilder.GraphifyNode
+                {
+                    Id = "test1",
+                    Label = "AuthTestService",
+                    SourceFile = "tests/Services/TestService.cs",
+                    Callable = true,
+                    CallableClass = true,
+                    NormLabel = "authtestservice",
+                    FileType = "code"
+                }
+            ],
+            Links = [],
+            Communities = [],
+            BuiltAtCommit = "abc123"
+        };
+    }
+
+    // Helper: graph with weak‑only node
+    private static GraphifySecurityContextBuilder.GraphifyGraph CreateTestGraphWithWeakOnlyNode()
+    {
+        return new GraphifySecurityContextBuilder.GraphifyGraph
+        {
+            Nodes =
+            [
+                new GraphifySecurityContextBuilder.GraphifyNode
+                {
+                    Id = "weak1",
+                    Label = "ConfigKey",
+                    SourceFile = "src/Config/ConfigKey.cs",
+                    Callable = true,
+                    CallableClass = true,
+                    NormLabel = "configkey",
+                    FileType = "code"
+                }
+            ],
+            Links = [],
+            Communities = [],
+            BuiltAtCommit = "abc123"
+        };
+    }
+
+    // Helper: graph with strong node
+    private static GraphifySecurityContextBuilder.GraphifyGraph CreateTestGraphWithStrongNode()
+    {
+        return new GraphifySecurityContextBuilder.GraphifyGraph
+        {
+            Nodes =
+            [
+                new GraphifySecurityContextBuilder.GraphifyNode
+                {
+                    Id = "strong1",
+                    Label = "AuthHandler",
+                    SourceFile = "src/Auth/AuthHandler.cs",
+                    Callable = true,
+                    CallableClass = true,
+                    NormLabel = "authhandler",
+                    FileType = "code"
+                }
+            ],
+            Links = [],
+            Communities = [],
+            BuiltAtCommit = "abc123"
+        };
+    }
 }
