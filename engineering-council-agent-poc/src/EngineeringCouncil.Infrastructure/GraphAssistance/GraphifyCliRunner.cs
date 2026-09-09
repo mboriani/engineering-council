@@ -15,10 +15,10 @@ public sealed class GraphifyCliRunner
     private readonly GraphAssistanceOptions _options;
     private readonly ILogger _logger;
 
-    public GraphifyCliRunner(GraphAssistanceOptions options, ILogger? logger = null)
+    public GraphifyCliRunner(GraphAssistanceOptions options, ILogger<GraphifyCliRunner>? logger = null)
     {
         _options = options;
-        _logger = logger ?? NullLogger.Instance;
+        _logger = logger ?? NullLogger<GraphifyCliRunner>.Instance;
     }
 
     /// <summary>
@@ -27,6 +27,8 @@ public sealed class GraphifyCliRunner
     /// </summary>
     public async Task<bool> ExtractAsync(string repositoryRoot, string outputGraphPath, CancellationToken cancellationToken = default)
     {
+        // Graphify treats --output as a DIRECTORY. It writes to {output}/graphify-out/graph.json.
+        // We pass the parent directory and then read from the predictable location.
         var outputDir = Path.GetDirectoryName(outputGraphPath);
         if (outputDir is not null)
             Directory.CreateDirectory(outputDir);
@@ -36,7 +38,7 @@ public sealed class GraphifyCliRunner
         var psi = new ProcessStartInfo
         {
             FileName = _options.GraphifyExecutable,
-            Arguments = $"\"{repositoryRoot}\" --output \"{outputGraphPath}\"",
+            Arguments = $"\"{repositoryRoot}\" --code-only --output \"{outputDir}\"",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -80,8 +82,17 @@ public sealed class GraphifyCliRunner
 
             if (!File.Exists(outputGraphPath))
             {
-                _logger.LogError("Graphify completed but graph.json not found at {Path}", outputGraphPath);
-                return false;
+                // Graphify writes to {outputDir}/graphify-out/graph.json
+                var graphifyOutPath = Path.Combine(outputDir ?? "", "graphify-out", "graph.json");
+                if (File.Exists(graphifyOutPath))
+                {
+                    File.Move(graphifyOutPath, outputGraphPath);
+                }
+                else
+                {
+                    _logger.LogError("Graphify completed but graph.json not found at {Path} or {AltPath}", outputGraphPath, graphifyOutPath);
+                    return false;
+                }
             }
 
             _logger.LogInformation("Graphify extraction completed in {Duration}ms", sw.ElapsedMilliseconds);

@@ -17,6 +17,7 @@ using EngineeringCouncil.Infrastructure.Scanning;
 using EngineeringCouncil.Infrastructure.Summarizing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace EngineeringCouncil.Infrastructure.DependencyInjection;
 
@@ -176,7 +177,9 @@ public static class CouncilServiceCollectionExtensions
         services.TryAddSingleton<GraphCache>(sp =>
             new GraphCache(sp.GetRequiredService<GraphAssistanceOptions>()));
         services.TryAddSingleton<GraphifyCliRunner>(sp =>
-            new GraphifyCliRunner(sp.GetRequiredService<GraphAssistanceOptions>()));
+            new GraphifyCliRunner(
+                sp.GetRequiredService<GraphAssistanceOptions>(),
+                sp.GetRequiredService<ILogger<GraphifyCliRunner>>()));
         services.TryAddSingleton<IGraphContextProvider, GraphContextProvider>();
 
         // Specialized analyzers — they obtain evidence through the factory only.

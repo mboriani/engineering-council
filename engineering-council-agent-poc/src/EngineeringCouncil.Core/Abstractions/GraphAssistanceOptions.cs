@@ -28,7 +28,8 @@ public sealed class GraphAssistanceOptions
     public string GraphifyExecutable { get; set; } = "graphify";
 
     /// <summary>
-    /// Per-extraction timeout for the Graphify process. Default 120 seconds.
+    /// Per-extraction timeout for the Graphify process. Default 300 seconds (5 minutes).
+    /// Initial extraction of a real repository can take several minutes for large codebases.
     /// </summary>
-    public int ExtractionTimeoutSeconds { get; set; } = 120;
+    public int ExtractionTimeoutSeconds { get; set; } = 300;
 }

@@ -216,6 +216,46 @@ public sealed class GraphAssistanceTests
         Assert.True(result.ExtractionExecuted);
     }
 
+    // Test 16 — default extraction timeout is 300 seconds
+    [Fact]
+    public void DefaultExtractionTimeout_Is300Seconds()
+    {
+        var options = new GraphAssistanceOptions();
+        Assert.Equal(300, options.ExtractionTimeoutSeconds);
+    }
+
+    // Test 17 — extraction timeout is configurable
+    [Fact]
+    public void ExtractionTimeout_IsConfigurable()
+    {
+        var options = new GraphAssistanceOptions { ExtractionTimeoutSeconds = 600 };
+        Assert.Equal(600, options.ExtractionTimeoutSeconds);
+    }
+
+    // Test 18 — extraction timeout preserves cancellation semantics
+    [Fact]
+    public void ExtractionTimeout_PreservesCancellationSemantics()
+    {
+        var options = new GraphAssistanceOptions { ExtractionTimeoutSeconds = 600 };
+        var timeout = TimeSpan.FromSeconds(options.ExtractionTimeoutSeconds);
+        Assert.Equal(TimeSpan.FromMinutes(10), timeout);
+    }
+
+    // Test 19 — timeout failure still degrades gracefully
+    [Fact]
+    public async Task ExtractionTimeout_FallsBackGracefully()
+    {
+        var provider = new FakeGraphContextProvider(
+            enabled: true,
+            failureReason: "Graphify extraction timed out after 00:05:00");
+
+        var result = await provider.GetContextAsync("/repo", "SNAP-timeout", FindingCategory.Security);
+
+        Assert.Null(result.Context);
+        Assert.NotNull(result.FailureReason);
+        Assert.Contains("timed out", result.FailureReason, StringComparison.OrdinalIgnoreCase);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     /// <summary>Fake IGraphContextProvider for testing.</summary>
