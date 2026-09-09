@@ -27,18 +27,18 @@ public sealed class GraphifyCliRunner
     /// </summary>
     public async Task<bool> ExtractAsync(string repositoryRoot, string outputGraphPath, CancellationToken cancellationToken = default)
     {
-        // Graphify treats --output as a DIRECTORY. It writes to {output}/graphify-out/graph.json.
-        // We pass the parent directory and then read from the predictable location.
+        // Graphify treats --output as a DIRECTORY and creates graphify-out/ inside it.
+        // We use a staging directory to avoid collisions, then move only graph.json.
         var outputDir = Path.GetDirectoryName(outputGraphPath);
-        if (outputDir is not null)
-            Directory.CreateDirectory(outputDir);
+        var stagingDir = Path.Combine(Path.GetTempPath(), "ec-graph-staging-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(stagingDir);
 
         var timeout = TimeSpan.FromSeconds(_options.ExtractionTimeoutSeconds);
 
         var psi = new ProcessStartInfo
         {
             FileName = _options.GraphifyExecutable,
-            Arguments = $"\"{repositoryRoot}\" --code-only --output \"{outputDir}\"",
+            Arguments = $"\"{repositoryRoot}\" --code-only --output \"{stagingDir}\"",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -57,6 +57,10 @@ public sealed class GraphifyCliRunner
                 return false;
             }
 
+            // Read stdout/stderr concurrently to prevent buffer deadlock.
+            var stdoutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+            var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
+
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(timeout);
 
@@ -71,29 +75,31 @@ public sealed class GraphifyCliRunner
                 return false;
             }
 
+            await stdoutTask.ConfigureAwait(false);
+            var stderr = await stderrTask.ConfigureAwait(false);
+
             sw.Stop();
 
             if (process.ExitCode != 0)
             {
-                var stderr = await process.StandardError.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
                 _logger.LogError("Graphify failed with exit code {ExitCode}: {Error}", process.ExitCode, stderr);
                 return false;
             }
 
-            if (!File.Exists(outputGraphPath))
+            // Graphify writes to {stagingDir}/graphify-out/graph.json
+            var graphSource = Path.Combine(stagingDir, "graphify-out", "graph.json");
+            if (!File.Exists(graphSource))
             {
-                // Graphify writes to {outputDir}/graphify-out/graph.json
-                var graphifyOutPath = Path.Combine(outputDir ?? "", "graphify-out", "graph.json");
-                if (File.Exists(graphifyOutPath))
-                {
-                    File.Move(graphifyOutPath, outputGraphPath);
-                }
-                else
-                {
-                    _logger.LogError("Graphify completed but graph.json not found at {Path} or {AltPath}", outputGraphPath, graphifyOutPath);
-                    return false;
-                }
+                _logger.LogError("Graphify completed but graph.json not found at {Path}", graphSource);
+                return false;
             }
+
+            // Move to final location
+            if (outputDir is not null)
+                Directory.CreateDirectory(outputDir);
+            if (File.Exists(outputGraphPath))
+                File.Delete(outputGraphPath);
+            File.Move(graphSource, outputGraphPath);
 
             _logger.LogInformation("Graphify extraction completed in {Duration}ms", sw.ElapsedMilliseconds);
             return true;
@@ -102,6 +108,11 @@ public sealed class GraphifyCliRunner
         {
             _logger.LogError(ex, "Graphify execution failed");
             return false;
+        }
+        finally
+        {
+            // Clean up staging directory
+            try { Directory.Delete(stagingDir, recursive: true); } catch { /* best effort */ }
         }
     }
 }
