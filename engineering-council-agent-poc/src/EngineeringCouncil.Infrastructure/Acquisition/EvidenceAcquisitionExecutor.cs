@@ -35,19 +35,22 @@ public sealed class EvidenceAcquisitionExecutor : IEvidenceAcquisitionExecutor
     private readonly EvidenceOptions _options;
     private readonly ContextContentPolicy _contentPolicy;
     private readonly ILogger<EvidenceAcquisitionExecutor> _logger;
+    private readonly IGraphContextProvider? _graphContextProvider;
 
     public EvidenceAcquisitionExecutor(
         IEvidenceProviderFactory factory,
         IAnalysisContextSelector contextSelector,
         EvidenceOptions options,
         ILogger<EvidenceAcquisitionExecutor>? logger = null,
-        ContextContentPolicy? contentPolicy = null)
+        ContextContentPolicy? contentPolicy = null,
+        IGraphContextProvider? graphContextProvider = null)
     {
         _factory = factory;
         _contextSelector = contextSelector;
         _options = options;
         _contentPolicy = contentPolicy ?? new ContextContentPolicy();
         _logger = logger ?? NullLogger<EvidenceAcquisitionExecutor>.Instance;
+        _graphContextProvider = graphContextProvider;
     }
 
     public async Task<EvidenceAcquisitionResult> ExecuteAsync(
@@ -173,7 +176,9 @@ public sealed class EvidenceAcquisitionExecutor : IEvidenceAcquisitionExecutor
             Instructions = DisciplinePrompts.BuildInstructions(step.Scope, step.Discipline),
             ContextSelection = selection,
             ProviderNames = [step.ProviderName],
-            CorrelationId = step.CorrelationId
+            CorrelationId = step.CorrelationId,
+            AdditionalContext = await ResolveGraphContextAsync(
+                isAgentic, step.Discipline, repository, cancellationToken).ConfigureAwait(false)
         };
 
         // Per-step timeout (M15.2B): the provider's OWN configured timeout wins;
@@ -296,6 +301,39 @@ public sealed class EvidenceAcquisitionExecutor : IEvidenceAcquisitionExecutor
 
     private static decimal? Sum(IEnumerable<decimal?> values)
         => values.Any(v => v.HasValue) ? values.Sum(v => v ?? 0m) : null;
+
+    /// <summary>
+    /// Resolves graph-assisted navigation context for agentic providers.
+    /// Returns null when graph assistance is disabled, the provider is not agentic,
+    /// the discipline is not supported, or graph acquisition fails.
+    /// </summary>
+    private async Task<string?> ResolveGraphContextAsync(
+        bool isAgentic, FindingCategory? discipline, RepositorySnapshot repository, CancellationToken cancellationToken)
+    {
+        if (!isAgentic || discipline is null || _graphContextProvider is null)
+            return null;
+
+        try
+        {
+            var snapshotFingerprint = SnapshotFingerprint.Compute(repository.RootPath, repository.Files);
+            var result = await _graphContextProvider.GetContextAsync(
+                repository.RootPath, snapshotFingerprint, discipline.Value, cancellationToken).ConfigureAwait(false);
+
+            // Record telemetry in logger — does not change the package schema
+            _logger.LogInformation(
+                "Graph assistance: enabled={Enabled} cacheHit={CacheHit} extraction={Extraction} " +
+                "chars={Chars} discipline={Discipline} failure={Failure}",
+                result.Enabled, result.CacheHit, result.ExtractionExecuted,
+                result.ContextCharacters, result.Discipline, result.FailureReason);
+
+            return result.Context;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Graph context resolution failed — falling back to no context");
+            return null;
+        }
+    }
 
     /// <summary>
     /// Context selection for an agentic step: an EMPTY, explicit "the agent explores"

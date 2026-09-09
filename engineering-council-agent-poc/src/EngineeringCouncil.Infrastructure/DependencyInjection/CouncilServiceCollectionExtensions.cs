@@ -6,6 +6,7 @@ using EngineeringCouncil.Core.Domain;
 using EngineeringCouncil.Infrastructure.Llm;
 using EngineeringCouncil.Infrastructure.Acquisition;
 using EngineeringCouncil.Infrastructure.Evidence;
+using EngineeringCouncil.Infrastructure.GraphAssistance;
 using EngineeringCouncil.Infrastructure.Interpretation;
 using EngineeringCouncil.Infrastructure.Merging;
 using EngineeringCouncil.Infrastructure.Reconciliation;
@@ -57,6 +58,9 @@ public sealed class CouncilOptions
 
     /// <summary>Targeted semantic reconciliation config (<c>Council:SemanticReconciliation</c>). Disabled by default.</summary>
     public SemanticReconciliationOptions SemanticReconciliation { get; set; } = new();
+
+    /// <summary>Graph-assisted agentic context config (<c>GraphAssistance</c>). Disabled by default.</summary>
+    public GraphAssistanceOptions GraphAssistance { get; set; } = new();
 
     /// <summary>What happens when a selected provider cannot execute (<c>Evidence:ProviderFailureMode</c>).</summary>
     public ProviderFailureMode ProviderFailureMode { get; set; } = ProviderFailureMode.Continue;
@@ -164,6 +168,16 @@ public static class CouncilServiceCollectionExtensions
         services.TryAddSingleton<ISemanticReconciliationReviewer>(sp =>
             new LlmSemanticReconciliationReviewer(
                 sp.GetRequiredService<IClaudeClient>(), sp.GetRequiredService<SemanticReconciliationOptions>()));
+
+        // Graph-assisted agentic context (M16.3) — disabled by default, opt-in.
+        // Provides discipline-specific navigation context to agentic providers via
+        // EvidenceRequest.AdditionalContext. Falls back silently on any failure.
+        services.AddSingleton(options.GraphAssistance);
+        services.TryAddSingleton<GraphCache>(sp =>
+            new GraphCache(sp.GetRequiredService<GraphAssistanceOptions>()));
+        services.TryAddSingleton<GraphifyCliRunner>(sp =>
+            new GraphifyCliRunner(sp.GetRequiredService<GraphAssistanceOptions>()));
+        services.TryAddSingleton<IGraphContextProvider, GraphContextProvider>();
 
         // Specialized analyzers — they obtain evidence through the factory only.
         services.AddAnalyzer<ArchitectureAnalyzer>();

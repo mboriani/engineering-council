@@ -2,6 +2,7 @@ using EngineeringCouncil.Core.Abstractions;
 using EngineeringCouncil.Core.Application;
 using EngineeringCouncil.Core.Domain;
 using EngineeringCouncil.Infrastructure.DependencyInjection;
+using EngineeringCouncil.Infrastructure.GraphAssistance;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -99,6 +100,11 @@ using var host = Host.CreateDefaultBuilder(args)
             // Disabled by default — offline/default behavior stays identical to M14.3.
             CliArgs.BindSemanticReconciliation(
                 context.Configuration.GetSection(SemanticReconciliationOptions.SectionName), o.SemanticReconciliation);
+
+            // Graph-assisted agentic context (M16.3): GraphAssistance section.
+            // Disabled by default — opt-in per repo/snapshot.
+            CliArgs.BindGraphAssistance(
+                context.Configuration.GetSection("GraphAssistance"), o.GraphAssistance);
         });
     })
     .Build();
@@ -332,6 +338,15 @@ internal static class CliArgs
         if (section["Model"] is { Length: > 0 } model) options.Model = model;
         if (int.TryParse(section["MaxOutputTokens"], out var maxTokens) && maxTokens > 0) options.MaxOutputTokens = maxTokens;
         if (int.TryParse(section["TimeoutSeconds"], out var timeout) && timeout > 0) options.TimeoutSeconds = timeout;
+    }
+
+    /// <summary>Binds a <c>GraphAssistance</c> section onto the graph assistance options.</summary>
+    public static void BindGraphAssistance(IConfiguration section, GraphAssistanceOptions options)
+    {
+        if (bool.TryParse(section["Enabled"], out var enabled)) options.Enabled = enabled;
+        if (section["CacheDirectory"] is { Length: > 0 } cacheDir) options.CacheDirectory = cacheDir;
+        if (section["GraphifyExecutable"] is { Length: > 0 } exe) options.GraphifyExecutable = exe;
+        if (int.TryParse(section["ExtractionTimeoutSeconds"], out var timeout) && timeout > 0) options.ExtractionTimeoutSeconds = timeout;
     }
 
     /// <summary>Reads Evidence:ProviderFailureMode (Continue | FailRun); defaults to Continue.</summary>
