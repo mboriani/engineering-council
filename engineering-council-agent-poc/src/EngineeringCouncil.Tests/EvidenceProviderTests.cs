@@ -10,7 +10,7 @@ namespace EngineeringCouncil.Tests;
 
 public sealed class EvidenceProviderTests
 {
-    private static EvidenceRequest RequestFor(FindingCategory category)
+    private static EvidenceRequest RequestFor(FindingCategory category, string? additionalContext = null)
     {
         var file = new ScannedFile { RelativePath = "src/Service.cs", Extension = ".cs", SizeBytes = 1, LineCount = 2, Content = "class Service {}" };
         return new EvidenceRequest
@@ -29,7 +29,8 @@ public sealed class EvidenceProviderTests
                 EstimatedContentSize = file.Content!.Length
             },
             ProviderNames = ["Mock"],
-            CorrelationId = $"Mock:{category}"
+            CorrelationId = $"Mock:{category}",
+            AdditionalContext = additionalContext
         };
     }
 
@@ -170,5 +171,121 @@ public sealed class EvidenceProviderTests
         Assert.Contains("ARCH-1", finding.SourceRules);
         Assert.Contains("Mock", finding.SupportingProviders);
         Assert.Equal(1, finding.SupportingObservationCount);
+    }
+
+    // ── Agentic Context Injection Seam (M16.2A) ──────────────────────────────────
+
+    private static EvidenceRequest AgenticRequest(FindingCategory category, string? additionalContext = null)
+        => RequestFor(category, additionalContext);
+
+    [Fact]
+    public void ClaudeCodePromptBuilder_NoAdditionalContext_PreservesExistingPrompt()
+    {
+        var request = AgenticRequest(FindingCategory.Security);
+        var prompt = ClaudeCodePromptBuilder.Build(request);
+
+        Assert.DoesNotContain("## Additional Context", prompt);
+        Assert.Contains("You are an engineering evidence acquisition agent", prompt);
+        Assert.Contains("# Requested discipline", prompt);
+        Assert.Contains("Security", prompt);
+    }
+
+    [Fact]
+    public void CodexPromptBuilder_NoAdditionalContext_PreservesExistingPrompt()
+    {
+        var request = AgenticRequest(FindingCategory.Security);
+        var prompt = CodexPromptBuilder.Build(request);
+
+        Assert.DoesNotContain("## Additional Context", prompt);
+        Assert.Contains("You are an engineering evidence acquisition agent", prompt);
+        Assert.Contains("# Requested discipline", prompt);
+        Assert.Contains("Security", prompt);
+    }
+
+    [Fact]
+    public void OpenCodePromptBuilder_NoAdditionalContext_PreservesExistingPrompt()
+    {
+        var request = AgenticRequest(FindingCategory.Security);
+        var prompt = OpenCodePromptBuilder.Build(request);
+
+        Assert.DoesNotContain("## Additional Context", prompt);
+        Assert.Contains("You are an engineering evidence acquisition agent", prompt);
+        Assert.Contains("# Requested discipline", prompt);
+        Assert.Contains("Security", prompt);
+    }
+
+    [Fact]
+    public void ClaudeCodePromptBuilder_WithAdditionalContext_IncludesContextSection()
+    {
+        const string testContext = "TEST CONTEXT: foo";
+        var request = AgenticRequest(FindingCategory.Security, testContext);
+        var prompt = ClaudeCodePromptBuilder.Build(request);
+
+        Assert.Contains("## Additional Context", prompt);
+        Assert.Contains(testContext, prompt);
+        Assert.Contains("Treat this context as navigation/supporting context", prompt);
+        Assert.Contains("Do not treat it as authoritative evidence", prompt);
+        Assert.Contains("Verify findings against repository source", prompt);
+        Assert.Contains("You may inspect files outside this context", prompt);
+    }
+
+    [Fact]
+    public void CodexPromptBuilder_WithAdditionalContext_IncludesContextSection()
+    {
+        const string testContext = "TEST CONTEXT: foo";
+        var request = AgenticRequest(FindingCategory.CodeQuality, testContext);
+        var prompt = CodexPromptBuilder.Build(request);
+
+        Assert.Contains("## Additional Context", prompt);
+        Assert.Contains(testContext, prompt);
+        Assert.Contains("Treat this context as navigation/supporting context", prompt);
+        Assert.Contains("Do not treat it as authoritative evidence", prompt);
+        Assert.Contains("Verify findings against repository source", prompt);
+        Assert.Contains("You may inspect files outside this context", prompt);
+    }
+
+    [Fact]
+    public void OpenCodePromptBuilder_WithAdditionalContext_IncludesContextSection()
+    {
+        const string testContext = "TEST CONTEXT: foo";
+        var request = AgenticRequest(FindingCategory.Reliability, testContext);
+        var prompt = OpenCodePromptBuilder.Build(request);
+
+        Assert.Contains("## Additional Context", prompt);
+        Assert.Contains(testContext, prompt);
+        Assert.Contains("Treat this context as navigation/supporting context", prompt);
+        Assert.Contains("Do not treat it as authoritative evidence", prompt);
+        Assert.Contains("Verify findings against repository source", prompt);
+        Assert.Contains("You may inspect files outside this context", prompt);
+    }
+
+    [Fact]
+    public void AllAgenticProviders_WithAdditionalContext_IncludeGuidanceText()
+    {
+        const string testContext = "GRAPH MAP: ClassA -> ClassB";
+        var claudePrompt = ClaudeCodePromptBuilder.Build(AgenticRequest(FindingCategory.Architecture, testContext));
+        var codexPrompt = CodexPromptBuilder.Build(AgenticRequest(FindingCategory.Architecture, testContext));
+        var opencodePrompt = OpenCodePromptBuilder.Build(AgenticRequest(FindingCategory.Architecture, testContext));
+
+        foreach (var prompt in new[] { claudePrompt, codexPrompt, opencodePrompt })
+        {
+            Assert.Contains("Treat this context as navigation/supporting context", prompt);
+            Assert.Contains("Do not treat it as authoritative evidence", prompt);
+            Assert.Contains("Verify findings against repository source", prompt);
+            Assert.Contains("You may inspect files outside this context", prompt);
+        }
+    }
+
+    [Fact]
+    public void AllAgenticProviders_EmptyAdditionalContext_DoesNotAddSection()
+    {
+        var claudePrompt = ClaudeCodePromptBuilder.Build(AgenticRequest(FindingCategory.Testing, ""));
+        var codexPrompt = CodexPromptBuilder.Build(AgenticRequest(FindingCategory.Testing, "   "));
+        var opencodePrompt = OpenCodePromptBuilder.Build(AgenticRequest(FindingCategory.Testing, null));
+
+        foreach (var prompt in new[] { claudePrompt, codexPrompt, opencodePrompt })
+        {
+            Assert.DoesNotContain("## Additional Context", prompt);
+        }
     }
 }

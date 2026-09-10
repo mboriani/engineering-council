@@ -40,6 +40,15 @@ public static class ClaudeCodePromptBuilder
         "Repository access is READ ONLY. You may list files, read files, search code, and inspect the project structure.\n" +
         "You must NOT modify source files, create files, delete files, run formatting, commit changes, or generate patches.";
 
+    private const string AdditionalContextSection =
+        "## Additional Context\n" +
+        "{0}\n\n" +
+        "Important:\n" +
+        "- Treat this context as navigation/supporting context.\n" +
+        "- Do not treat it as authoritative evidence.\n" +
+        "- Verify findings against repository source.\n" +
+        "- You may inspect files outside this context.";
+
     /// <summary>
     /// Builds the complete analysis instruction for one acquisition step. The requested
     /// discipline, the discipline instructions, and the existing structured evidence
@@ -53,7 +62,7 @@ public static class ClaudeCodePromptBuilder
             ? DisciplinePrompts.BuildInstructions(request.Scope, request.Discipline)
             : request.Instructions;
 
-        return $"""
+        var basePrompt = $"""
             {AgentRole}
 
             {RepositoryNote}
@@ -65,5 +74,11 @@ public static class ClaudeCodePromptBuilder
 
             {instructions}
             """;
+
+        if (string.IsNullOrWhiteSpace(request.AdditionalContext))
+            return basePrompt;
+
+        var contextSection = string.Format(AdditionalContextSection, request.AdditionalContext.Trim());
+        return basePrompt + "\n\n" + contextSection;
     }
 }

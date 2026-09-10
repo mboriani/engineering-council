@@ -34,4 +34,12 @@ public sealed record EvidenceRequest
     public required string CorrelationId { get; init; }
 
     public IReadOnlyDictionary<string, string> Metadata { get; init; } = new Dictionary<string, string>();
+
+    /// <summary>
+    /// Optional additional context for agentic providers. When present, this context is
+    /// included in the agent prompt as a clearly delimited section. It serves as a
+    /// navigation/supporting map — agents must verify findings against repository source
+    /// and may explore outside this context.
+    /// </summary>
+    public string? AdditionalContext { get; init; }
 }

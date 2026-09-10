@@ -1,3 +1,6 @@
+using System.ComponentModel;
+using System.Diagnostics;
+
 namespace EngineeringCouncil.Infrastructure.Scanning;
 
 /// <summary>
@@ -35,6 +38,91 @@ public static class GitProbe
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             return (null, null);
+        }
+    }
+
+    /// <summary>
+    /// Returns true when the Git working tree has no tracked modifications
+    /// relative to HEAD. Uses `git status --porcelain --untracked-files=no`.
+    /// Returns false on error or when git is not available.
+    /// </summary>
+    public static bool IsCleanWorkingTree(string rootPath)
+    {
+        try
+        {
+            var gitDir = Path.Combine(rootPath, ".git");
+            if (!Directory.Exists(gitDir)) return false;
+
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "status --porcelain --untracked-files=no",
+                    WorkingDirectory = rootPath,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.Start();
+            var output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit(5000);
+
+            return process.ExitCode == 0 && string.IsNullOrWhiteSpace(output);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Returns the list of tracked file paths with modifications relative to HEAD.
+    /// Uses `git status --porcelain --untracked-files=no`. Returns empty on error.
+    /// </summary>
+    public static IReadOnlyList<string> GetModifiedTrackedFiles(string rootPath)
+    {
+        try
+        {
+            var gitDir = Path.Combine(rootPath, ".git");
+            if (!Directory.Exists(gitDir)) return [];
+
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "status --porcelain --untracked-files=no",
+                    WorkingDirectory = rootPath,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.Start();
+            var output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit(5000);
+
+            if (process.ExitCode != 0) return [];
+
+            var modified = new List<string>();
+            foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (line.Length < 4) continue;
+                var path = line[3..].Trim('"');
+                modified.Add(path.Replace('\\', '/'));
+            }
+
+            return modified;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception)
+        {
+            return [];
         }
     }
 
