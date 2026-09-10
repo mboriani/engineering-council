@@ -20,7 +20,16 @@ on **Microsoft Agent Framework**.
 - The agent **only analyzes** — it never edits, runs, or mutates the target.
 - Output must be consumable by the future dashboard (stable `Finding` contract).
 
-## Current state (v37 — 2026-08-19, Milestone 015.4A)
+## Current state (v38 — 2026-09-10, Milestone 016 — CLOSED / ACCEPTED)
+
+- **M16 Graph-Assisted Context** (MILESTONE-016, D-111): graph-assisted context is accepted for
+  production/practical Council usage. Graphify 0.9.53 provides deterministic local graph extraction
+  without LLM dependency. Currently opt-in; Security + Architecture supported; minimal navigation
+  context <= 3000 chars; persistent graph cache with cross-run reuse validated; graceful fallback
+  when Graphify unavailable/fails/timeout; package schema remains 1.1; known untracked-source
+  limitation documented; no further M16 experiments planned. See `MILESTONE-016-graph-assisted-context.md`.
+
+## Previous state (v37 — 2026-08-19, Milestone 015.4A)
 
 - **Dedup False-Merge Hardening** (MILESTONE-015.4A, D-110, ADR-026 amended): fixed the single
   concrete M15.4 defect — the false dedup merge `CQL-c55887984d` where bundle RAW-010 ("Duplicated
