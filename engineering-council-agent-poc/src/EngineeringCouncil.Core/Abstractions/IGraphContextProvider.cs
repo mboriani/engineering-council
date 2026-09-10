@@ -15,8 +15,7 @@ public interface IGraphContextProvider
     /// is not supported.
     /// </summary>
     Task<GraphContextResult> GetContextAsync(
-        string repositoryPath,
-        string snapshotFingerprint,
+        RepositorySnapshot repository,
         FindingCategory discipline,
         CancellationToken cancellationToken = default);
 }

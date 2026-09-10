@@ -315,9 +315,8 @@ public sealed class EvidenceAcquisitionExecutor : IEvidenceAcquisitionExecutor
 
         try
         {
-            var snapshotFingerprint = SnapshotFingerprint.Compute(repository.RootPath, repository.Files);
             var result = await _graphContextProvider.GetContextAsync(
-                repository.RootPath, snapshotFingerprint, discipline.Value, cancellationToken).ConfigureAwait(false);
+                repository, discipline.Value, cancellationToken).ConfigureAwait(false);
 
             // Record telemetry in logger — does not change the package schema
             _logger.LogInformation(

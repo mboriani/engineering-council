@@ -17,7 +17,7 @@ public sealed class GraphAssistanceTests
         var provider = new FakeGraphContextProvider(enabled: false);
 
         var result = await provider.GetContextAsync(
-            "/repo", "SNAP-test123", FindingCategory.Security);
+            FakeRepo("SNAP-test123"), FindingCategory.Security);
 
         Assert.False(result.Enabled);
         Assert.Null(result.Context);
@@ -30,7 +30,7 @@ public sealed class GraphAssistanceTests
         var provider = new FakeGraphContextProvider(enabled: true, cacheHit: true);
 
         var result = await provider.GetContextAsync(
-            "/repo", "SNAP-test", FindingCategory.Security);
+            FakeRepo("SNAP-test"), FindingCategory.Security);
 
         Assert.True(result.CacheHit);
         Assert.False(result.ExtractionExecuted);
@@ -43,7 +43,7 @@ public sealed class GraphAssistanceTests
         var provider = new FakeGraphContextProvider(enabled: true, cacheHit: false);
 
         var result = await provider.GetContextAsync(
-            "/repo", "SNAP-miss", FindingCategory.Security);
+            FakeRepo("SNAP-miss"), FindingCategory.Security);
 
         Assert.False(result.CacheHit);
         Assert.True(result.ExtractionExecuted);
@@ -55,7 +55,7 @@ public sealed class GraphAssistanceTests
     {
         var provider = new FakeGraphContextProvider(enabled: true, cacheHit: true);
 
-        var result = await provider.GetContextAsync("/repo", "SNAP-reuse", FindingCategory.Security);
+        var result = await provider.GetContextAsync(FakeRepo("SNAP-reuse"), FindingCategory.Security);
 
         Assert.True(result.CacheHit);
         Assert.False(result.ExtractionExecuted);
@@ -67,7 +67,7 @@ public sealed class GraphAssistanceTests
     {
         var provider = new FakeGraphContextProvider(enabled: true, cacheHit: false);
 
-        var result = await provider.GetContextAsync("/repo", "SNAP-new", FindingCategory.Security);
+        var result = await provider.GetContextAsync(FakeRepo("SNAP-new"), FindingCategory.Security);
 
         Assert.False(result.CacheHit);
         Assert.True(result.ExtractionExecuted);
@@ -80,7 +80,7 @@ public sealed class GraphAssistanceTests
         var provider = new FakeGraphContextProvider(enabled: true, cacheHit: false);
 
         var tasks = Enumerable.Range(0, 5).Select(_ =>
-            provider.GetContextAsync("/repo", "SNAP-concurrent", FindingCategory.Security));
+            provider.GetContextAsync(FakeRepo("SNAP-concurrent"), FindingCategory.Security));
 
         var results = await Task.WhenAll(tasks);
 
@@ -94,7 +94,7 @@ public sealed class GraphAssistanceTests
     {
         var provider = new FakeGraphContextProvider(enabled: true, failureReason: "extraction failed");
 
-        var result = await provider.GetContextAsync("/repo", "SNAP-fail", FindingCategory.Security);
+        var result = await provider.GetContextAsync(FakeRepo("SNAP-fail"), FindingCategory.Security);
 
         Assert.Null(result.Context);
         Assert.NotNull(result.FailureReason);
@@ -107,7 +107,7 @@ public sealed class GraphAssistanceTests
     {
         var provider = new FakeGraphContextProvider(enabled: true, failureReason: "invalid graph JSON");
 
-        var result = await provider.GetContextAsync("/repo", "SNAP-invalid", FindingCategory.Security);
+        var result = await provider.GetContextAsync(FakeRepo("SNAP-invalid"), FindingCategory.Security);
 
         Assert.Null(result.Context);
         Assert.NotNull(result.FailureReason);
@@ -119,7 +119,7 @@ public sealed class GraphAssistanceTests
     {
         var provider = new FakeGraphContextProvider(enabled: true, contextText: "Security Navigation Map\n\nSecurity Filter → User Auth flow");
 
-        var result = await provider.GetContextAsync("/repo", "SNAP-sec", FindingCategory.Security);
+        var result = await provider.GetContextAsync(FakeRepo("SNAP-sec"), FindingCategory.Security);
 
         Assert.NotNull(result.Context);
         Assert.Contains("Security Navigation Map", result.Context);
@@ -131,7 +131,7 @@ public sealed class GraphAssistanceTests
     {
         var provider = new FakeGraphContextProvider(enabled: true, contextText: "Architecture Navigation Map\n\nCore → Infrastructure flow");
 
-        var result = await provider.GetContextAsync("/repo", "SNAP-arch", FindingCategory.Architecture);
+        var result = await provider.GetContextAsync(FakeRepo("SNAP-arch"), FindingCategory.Architecture);
 
         Assert.NotNull(result.Context);
         Assert.Contains("Architecture Navigation Map", result.Context);
@@ -143,7 +143,7 @@ public sealed class GraphAssistanceTests
     {
         var provider = new FakeGraphContextProvider(enabled: true);
 
-        var result = await provider.GetContextAsync("/repo", "SNAP-test", FindingCategory.Testing);
+        var result = await provider.GetContextAsync(FakeRepo("SNAP-test"), FindingCategory.Testing);
 
         Assert.Null(result.Context);
     }
@@ -156,7 +156,7 @@ public sealed class GraphAssistanceTests
     {
         var provider = new FakeGraphContextProvider(enabled: true, contextText: new string('x', 2500));
 
-        var result = await provider.GetContextAsync("/repo", "SNAP-budget", discipline);
+        var result = await provider.GetContextAsync(FakeRepo("SNAP-budget"), discipline);
 
         Assert.NotNull(result.Context);
         Assert.True(result.Context.Length <= 3000,
@@ -198,8 +198,8 @@ public sealed class GraphAssistanceTests
     {
         var provider = new FakeGraphContextProvider(enabled: true, cacheHit: true);
 
-        await provider.GetContextAsync("/repo", "SNAP-multi", FindingCategory.Security);
-        await provider.GetContextAsync("/repo", "SNAP-multi", FindingCategory.Architecture);
+        await provider.GetContextAsync(FakeRepo("SNAP-multi"), FindingCategory.Security);
+        await provider.GetContextAsync(FakeRepo("SNAP-multi"), FindingCategory.Architecture);
 
         // Should not throw — same snapshot, different disciplines
     }
@@ -210,7 +210,7 @@ public sealed class GraphAssistanceTests
     {
         var provider = new FakeGraphContextProvider(enabled: true, cacheHit: false);
 
-        var result = await provider.GetContextAsync("/repo", "SNAP-wrong", FindingCategory.Security);
+        var result = await provider.GetContextAsync(FakeRepo("SNAP-wrong"), FindingCategory.Security);
 
         Assert.False(result.CacheHit);
         Assert.True(result.ExtractionExecuted);
@@ -249,7 +249,7 @@ public sealed class GraphAssistanceTests
             enabled: true,
             failureReason: "Graphify extraction timed out after 00:05:00");
 
-        var result = await provider.GetContextAsync("/repo", "SNAP-timeout", FindingCategory.Security);
+        var result = await provider.GetContextAsync(FakeRepo("SNAP-timeout"), FindingCategory.Security);
 
         Assert.Null(result.Context);
         Assert.NotNull(result.FailureReason);
@@ -257,6 +257,16 @@ public sealed class GraphAssistanceTests
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private static RepositorySnapshot FakeRepo(string commit, string rootPath = "/repo")
+        => new()
+        {
+            RootPath = rootPath,
+            SolutionName = "Test",
+            Commit = commit,
+            Branch = "main",
+            Files = []
+        };
 
     /// <summary>Fake IGraphContextProvider for testing.</summary>
     private sealed class FakeGraphContextProvider : IGraphContextProvider
@@ -283,8 +293,7 @@ public sealed class GraphAssistanceTests
         }
 
         public Task<GraphContextResult> GetContextAsync(
-            string repositoryPath,
-            string snapshotFingerprint,
+            RepositorySnapshot repository,
             FindingCategory discipline,
             CancellationToken cancellationToken = default)
         {

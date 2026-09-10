@@ -3,6 +3,7 @@ using System.Text.Json;
 using EngineeringCouncil.Core.Abstractions;
 using EngineeringCouncil.Core.Domain;
 using EngineeringCouncil.Infrastructure.Experiments;
+using EngineeringCouncil.Infrastructure.Scanning;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -42,8 +43,7 @@ public sealed class GraphContextProvider : IGraphContextProvider
     }
 
     public async Task<GraphContextResult> GetContextAsync(
-        string repositoryPath,
-        string snapshotFingerprint,
+        RepositorySnapshot repository,
         FindingCategory discipline,
         CancellationToken cancellationToken = default)
     {
@@ -56,9 +56,19 @@ public sealed class GraphContextProvider : IGraphContextProvider
             return new GraphContextResult { Enabled = true };
         }
 
+        // Compute stable graph cache identity from Git state + repository snapshot.
+        // This ensures Council/OpenCode-generated artifacts never invalidate the cache.
+        var isCleanGitTree = repository.Commit is not null
+            ? GitProbe.IsCleanWorkingTree(repository.RootPath)
+            : (bool?)null;
+        var modifiedFiles = isCleanGitTree == false
+            ? GitProbe.GetModifiedTrackedFiles(repository.RootPath)
+            : null;
+        var snapshotFingerprint = GraphCacheIdentity.Compute(repository, isCleanGitTree, modifiedFiles);
+
         var key = new GraphCacheKey
         {
-            RepositoryPath = Path.GetFullPath(repositoryPath),
+            RepositoryPath = Path.GetFullPath(repository.RootPath),
             SnapshotFingerprint = snapshotFingerprint
         };
 
@@ -82,7 +92,7 @@ public sealed class GraphContextProvider : IGraphContextProvider
                     "graph.json");
 
                 var success = await _runner.ExtractAsync(
-                    repositoryPath, graphPath, cancellationToken).ConfigureAwait(false);
+                    repository.RootPath, graphPath, cancellationToken).ConfigureAwait(false);
 
                 if (!success)
                     return new GraphContextResult
